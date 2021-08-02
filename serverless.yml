@@ -1,0 +1,55 @@
+service: file-server-development
+
+plugins:
+  - serverless-bundle
+  - serverless-offline
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: sa-east-1
+  bucketName: mytemporarybuckettotesting
+  imageUploadBucket: my-image-upload-bucket-demo-aws-temporary
+  environment: ${file(./env.yml):${self:custom.stage}, file(./env.yml):default}
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ${self:custom.region}
+  apiGateway:
+    binaryMediaTypes:
+      - "multipart/form-data"
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
+
+  environment:
+    stage: ${self:custom.stage}
+    region: ${self:custom.region}
+    bucketName: ${self:custom.bucketName}
+    imageUploadBucket: ${self:custom.imageUploadBucket}
+    awsLocalDynammoAccessKey: ${self:custom.environment.awsLocalDynammoAccessKey}
+    awsLocalDynammoSecretAccessKey: ${self:custom.environment.awsLocalDynammoSecretAccessKey}
+
+functions:
+  uploadFile:
+    handler: api/controllers/FileController.uploadFile
+    events:
+      - http:
+          method: post
+          path: upload
+          cors: true
+
+resources:
+  Resources:
+    DemoBucketUpload:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+    ImageUploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.imageUploadBucket}
+        AccessControl: PublicRead
