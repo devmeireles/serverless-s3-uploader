@@ -6,8 +6,7 @@ import { BUCKET_NAME, parseFormData } from "libs/fileHandler-lib"
 const s3Client = new S3();
 
 const upload = async (event: APIGatewayProxyEvent): Promise<unknown> => {
-    const { file, fields } = await parseFormData(event)
-    // const tags = { filename: file.filename };
+    const { file } = await parseFormData(event)
 
     const name = uuid();
     const ext = file.contentType.split('/')

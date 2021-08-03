@@ -7,8 +7,7 @@ plugins:
 custom:
   stage: ${opt:stage, self:provider.stage}
   region: sa-east-1
-  bucketName: mytemporarybuckettotesting
-  imageUploadBucket: my-image-upload-bucket-demo-aws-temporary
+  imageUploadBucket: file-server-development-c70013f2-4145-6b24774bf48c
   environment: ${file(./env.yml):${self:custom.stage}, file(./env.yml):default}
 
 provider:
@@ -22,13 +21,15 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - s3:*
-      Resource: "*"
+        - s3:GetObject
+        - s3:PutObject
+        - s3:PutObjectAcl
+      Resource:
+        - arn:aws:s3:::*
 
   environment:
     stage: ${self:custom.stage}
     region: ${self:custom.region}
-    bucketName: ${self:custom.bucketName}
     imageUploadBucket: ${self:custom.imageUploadBucket}
     awsLocalDynammoAccessKey: ${self:custom.environment.awsLocalDynammoAccessKey}
     awsLocalDynammoSecretAccessKey: ${self:custom.environment.awsLocalDynammoSecretAccessKey}
@@ -44,10 +45,6 @@ functions:
 
 resources:
   Resources:
-    DemoBucketUpload:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.bucketName}
     ImageUploadBucket:
       Type: AWS::S3::Bucket
       Properties:
